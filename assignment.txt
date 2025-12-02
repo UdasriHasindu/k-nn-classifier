@@ -1,3 +1,7 @@
+CSCI 31022
+
+Machine Learning and Pattern Recognition
+
 Assignment 1
 
 Classify the following Data set using a k-Nearest Neigbour Classifier (k-NN).
