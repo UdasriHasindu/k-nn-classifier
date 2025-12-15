@@ -14,14 +14,13 @@ def load_arff_to_dataframe(file_path):
         with open(file_path, 'r') as f:
             lines = f.readlines()
         
-        # Find attribute definitions and data section
+        # Find attributes
         attributes = []
         data_start_idx = 0
         
         for i, line in enumerate(lines):
             line = line.strip()
             if line.startswith('@attribute'):
-                # Extract attribute name (remove quotes if present)
                 parts = line.split()
                 attr_name = parts[1].replace("'", "").replace('"', '')
                 attributes.append(attr_name)
@@ -33,17 +32,15 @@ def load_arff_to_dataframe(file_path):
         data_rows = []
         for i in range(data_start_idx, len(lines)):
             line = lines[i].strip()
-            if line and not line.startswith('%'):  # Skip empty lines and comments
-                # Split by comma and clean each value
+            if line and not line.startswith('%'):  
                 row = [val.strip() if val.strip() != '?' else np.nan for val in line.split(',')]
                 data_rows.append(row)
         
-        # Ensure consistent row lengths - trim to match number of attributes
         for i, row in enumerate(data_rows):
             if len(row) > len(attributes):
-                data_rows[i] = row[:len(attributes)]  # Trim extra columns
+                data_rows[i] = row[:len(attributes)]  
             elif len(row) < len(attributes):
-                data_rows[i].extend([np.nan] * (len(attributes) - len(row)))  # Pad with NaN
+                data_rows[i].extend([np.nan] * (len(attributes) - len(row))) 
         
         # Create DataFrame
         df = pd.DataFrame(data_rows, columns=attributes)
@@ -95,8 +92,6 @@ print(f"catergorical_cols: {catergorical_cols}")
 # 
 # **Label encoding (categorical features)**
 # 
-# - which converts categorical text/string values into numerical values that machine learning algorithms can process.
-# 
 
 # %%
 from sklearn.preprocessing import LabelEncoder
@@ -123,16 +118,6 @@ for col in catergorical_cols:
         
 df_processed
 
-# %% [markdown]
-# **Note**
-# 
-# Using `median` is more accurate that the mean in this case
-# 
-# - Robust to outliers: Medical data often contains extreme values
-# - Preserves distribution: Doesn't shift the data as much as mean
-# - Appropriate for skewed data: Medical measurements are often not normally distributed
-
-# %%
 # fill missing numerical features
 from sklearn.impute import SimpleImputer
 
@@ -200,7 +185,7 @@ print(pd.Series(y_train).value_counts())
 # ### Tuning & Training
 
 # %%
-# Hyperparameter Tuning (Fixed)
+# Hyperparameter Tuning 
 from sklearn.neighbors import KNeighborsClassifier
 
 # Check class distribution first
