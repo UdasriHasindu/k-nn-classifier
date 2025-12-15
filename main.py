@@ -177,16 +177,15 @@ print(f"Final dataset shape: {df_cleaned.shape}")
 # %%
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
 
 # %%
 y = df_cleaned['class']
-x = df_cleaned.iloc[:,:-1]
-
-scaler = StandardScaler()
-x = scaler.fit_transform(x)
+x = df_cleaned.drop(columns=['class'])
 
 x_train, x_test, y_train, y_test = train_test_split(
-    x, y, 
+    x, y,
     test_size=0.2, 
     stratify=y,  
     random_state=42
@@ -215,8 +214,13 @@ print(f"Using {cv_folds}-fold cross-validation")
 cv_score = []
 
 for k in range(1, 21):  # Test K from 1 to 20
-    knn = KNeighborsClassifier(n_neighbors=k)
-    scores = cross_val_score(knn, x_train, y_train, cv=cv_folds, scoring='accuracy')
+    pipeline = Pipeline([
+        ('scaler', StandardScaler()),
+        ('pca', PCA(n_components=0.95, random_state=42)),
+        ('knn', KNeighborsClassifier(n_neighbors=k))
+    ])
+
+    scores = cross_val_score(pipeline, x_train, y_train, cv=cv_folds, scoring='accuracy')
     cv_score.append(scores.mean())
     
     # Print progress for first 10 and every 5th
@@ -255,14 +259,19 @@ plt.show()
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 # Train the final model with best K
-final_knn = KNeighborsClassifier(n_neighbors=best_k)
-final_knn.fit(x_train, y_train)
+final_pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('pca', PCA(n_components=0.95, random_state=42)),
+    ('knn', KNeighborsClassifier(n_neighbors=best_k))
+])
+
+final_pipeline.fit(x_train, y_train)
 
 
 
 # %%
 # Make predictions
-y_pred = final_knn.predict(x_test)
+y_pred = final_pipeline.predict(x_test)
 
 # Calculate accuracy
 test_accuracy = accuracy_score(y_test, y_pred)
@@ -280,5 +289,8 @@ print(cm)
 
 # %%
 
+# Report PCA dimensionality used
+pca_step = final_pipeline.named_steps['pca']
+print(f"PCA retained {pca_step.n_components_} components to preserve 95% variance.")
 
 
